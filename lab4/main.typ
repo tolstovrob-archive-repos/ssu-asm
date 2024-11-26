@@ -104,7 +104,7 @@ PrintLoop:
     inc si
     ; Печатаем пробел между числами
     mov ah, 02h
-    mov dl, ' '
+    mov dl, 09h ; табуляция
     int 21h
     loop PrintLoop
     ret
@@ -112,33 +112,47 @@ PrintRow endp
 
 ; Процедура для вывода числа в виде строки
 PrintNum proc
+    mov bl, 10
     ; Если число меньше 10, просто выводим его как символ
-    cmp al, 10
+    cmp al, bl
     jl PrintSingleDigit
+
+    xor ah, ah ; обнуляем ah
 
     ; Если число двухзначное (например 10), выводим его как два символа
     ; Разделяем на десятки и единицы
-    mov bl, 10         ; Делитель 10
     div bl             ; AX / 10 -> AL = остаток (единицы), AH = десятки
+    mov bh, ah
     
     ; Выводим десятки
-    add ah, '0'        ; Преобразуем в символ
-    mov dl, ah
-    mov ah, 02h
-    int 21h         ; Выводим десятки
-    
-    ; Выводим единицы
     add al, '0'        ; Преобразуем в символ
     mov dl, al
+    mov ah, 02h
+    int 21h         ; Выводим десятки
+
+    ;xor al, al
+    
+    ; Выводим единицы
+    add bh, '0'        ; Преобразуем в символ
+    mov dl, bh
     mov ah, 02h
     int 21h         ; Выводим единицы
     
     ret
 
 PrintSingleDigit:
+    mov bl, al
+    xor al, al
+    cmp cx, 5
+    jz PrintSingleDigitWithoutSpace
+    mov ah, 02h
+    mov dl, ' '
+    int 21h
+
+PrintSingleDigitWithoutSpace:
     ; Если число одноцифровое (менее 10), выводим его как символ
-    add al, '0'        ; Преобразуем в символ
-    mov dl, al
+    add bl, '0'        ; Преобразуем в символ
+    mov dl, bl
     mov ah, 02h
     int 21h
     ret
